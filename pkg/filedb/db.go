@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/exonlabs/go-utils/pkg/crypto/xcipher"
+	"github.com/exonlabs/go-utils/pkg/types"
 )
 
 const (
@@ -72,7 +73,6 @@ func (db *DB) Get(key string) ([]byte, error) {
 
 	return nil, err
 }
-
 func (db *DB) GetBuffer(key string) (Buffer, error) {
 	keypath := db.KeyPath(key)
 	keybakpath := db.KeyPath(key + keyBakSuffix)
@@ -88,7 +88,7 @@ func (db *DB) GetBuffer(key string) (Buffer, error) {
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
 				db.WriteFile(keybakpath, rawdata)
-				return Buffer(data), nil
+				return types.NewNDict(data), nil
 			}
 		}
 	}
@@ -102,7 +102,43 @@ func (db *DB) GetBuffer(key string) (Buffer, error) {
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
 				db.WriteFile(keypath, rawdata)
-				return Buffer(data), nil
+				return types.NewNDict(data), nil
+			}
+		}
+	}
+
+	return nil, err
+}
+func (db *DB) GetBufferSlice(key string) ([]Buffer, error) {
+	keypath := db.KeyPath(key)
+	keybakpath := db.KeyPath(key + keyBakSuffix)
+
+	err := ErrNotExist
+
+	// check main file
+	if db.FileExist(keypath) {
+		var rawdata []byte
+		rawdata, err = db.ReadFile(keypath)
+		if err == nil {
+			var data []map[string]any
+			err = json.Unmarshal(rawdata, &data)
+			if err == nil {
+				db.WriteFile(keybakpath, rawdata)
+				return types.NewNDictSlice(data), nil
+			}
+		}
+	}
+
+	// check backup
+	if db.FileExist(keybakpath) {
+		var rawdata []byte
+		rawdata, err = db.ReadFile(keybakpath)
+		if err == nil {
+			var data []map[string]any
+			err = json.Unmarshal(rawdata, &data)
+			if err == nil {
+				db.WriteFile(keypath, rawdata)
+				return types.NewNDictSlice(data), nil
 			}
 		}
 	}
@@ -120,8 +156,14 @@ func (db *DB) Set(key string, value []byte) error {
 	}
 	return db.WriteFile(keybakpath, value)
 }
-
 func (db *DB) SetBuffer(key string, value Buffer) error {
+	data, err := json.MarshalIndent(value, "", "  ")
+	if err != nil {
+		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
+	}
+	return db.Set(key, data)
+}
+func (db *DB) SetBufferSlice(key string, value []Buffer) error {
 	data, err := json.MarshalIndent(value, "", "  ")
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
@@ -225,7 +267,7 @@ func (db *DB) GetSecureBuffer(key string) (Buffer, error) {
 				err = json.Unmarshal(value, &data)
 				if err == nil {
 					db.WriteFile(keybakpath, rawdata)
-					return Buffer(data), nil
+					return types.NewNDict(data), nil
 				}
 			}
 		}
@@ -243,7 +285,55 @@ func (db *DB) GetSecureBuffer(key string) (Buffer, error) {
 				err = json.Unmarshal(value, &data)
 				if err == nil {
 					db.WriteFile(keypath, rawdata)
-					return Buffer(data), nil
+					return types.NewNDict(data), nil
+				}
+			}
+		}
+	}
+
+	return nil, err
+}
+func (db *DB) GetSecureBufferSlice(key string) ([]Buffer, error) {
+	if db.cipher == nil {
+		return nil, ErrNoSecurity
+	}
+
+	keypath := db.KeyPath(key)
+	keybakpath := db.KeyPath(key + keyBakSuffix)
+
+	err := ErrNotExist
+
+	// check main file
+	if db.FileExist(keypath) {
+		var rawdata []byte
+		rawdata, err = db.ReadFile(keypath)
+		if err == nil {
+			var value []byte
+			value, err = db.cipher.Decrypt(rawdata)
+			if err == nil {
+				var data []map[string]any
+				err = json.Unmarshal(value, &data)
+				if err == nil {
+					db.WriteFile(keybakpath, rawdata)
+					return types.NewNDictSlice(data), nil
+				}
+			}
+		}
+	}
+
+	// check backup
+	if db.FileExist(keybakpath) {
+		var rawdata []byte
+		rawdata, err = db.ReadFile(keybakpath)
+		if err == nil {
+			var value []byte
+			value, err = db.cipher.Decrypt(rawdata)
+			if err == nil {
+				var data []map[string]any
+				err = json.Unmarshal(value, &data)
+				if err == nil {
+					db.WriteFile(keypath, rawdata)
+					return types.NewNDictSlice(data), nil
 				}
 			}
 		}
@@ -264,6 +354,13 @@ func (db *DB) SetSecure(key string, value []byte) error {
 	return db.Set(key, b)
 }
 func (db *DB) SetSecureBuffer(key string, value Buffer) error {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
+	}
+	return db.SetSecure(key, data)
+}
+func (db *DB) SetSecureBufferSlice(key string, value []Buffer) error {
 	data, err := json.Marshal(value)
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
