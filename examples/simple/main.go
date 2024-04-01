@@ -22,7 +22,7 @@ func main() {
 		os.RemoveAll(dbPath)
 		os.MkdirAll(dbPath, 0o777)
 
-		db := filedb.NewDB(dbPath)
+		db := filedb.NewPack(dbPath)
 		for _, k := range []string{
 			"a.1.11", "a.1.12", "a.2.21", "b.1.11", "c.1.11"} {
 			if err := db.Set(k, []byte{0, 1, 2, 3}); err != nil {
@@ -34,7 +34,7 @@ func main() {
 		return
 	}
 
-	db := filedb.NewDB(dbPath)
+	db := filedb.NewPack(dbPath)
 
 	fmt.Println("\nTesting Read ...")
 	for _, k := range []string{

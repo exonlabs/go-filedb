@@ -14,7 +14,7 @@ var (
 	SECRET = "123456789"
 )
 
-func init_security(db *filedb.DB, aes256 bool) {
+func init_security(db *filedb.Query, aes256 bool) {
 	var err error
 	if aes256 {
 		err = db.InitAES256(SECRET)
@@ -39,7 +39,7 @@ func main() {
 		os.RemoveAll(dbPath)
 		os.MkdirAll(dbPath, 0o777)
 
-		db := filedb.NewDB(dbPath)
+		db := filedb.NewPack(dbPath)
 		init_security(db, *aes256)
 		for _, k := range []string{
 			"a.1.11", "a.1.12", "a.2.21", "b.1.11", "c.1.11"} {
@@ -52,7 +52,7 @@ func main() {
 		return
 	}
 
-	db := filedb.NewDB(dbPath)
+	db := filedb.NewPack(dbPath)
 	init_security(db, *aes256)
 
 	fmt.Println("\nTesting Read ...")

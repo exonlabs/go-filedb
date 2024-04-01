@@ -4,4 +4,4 @@ go 1.22.0
 
 require golang.org/x/sys v0.18.0
 
-require github.com/exonlabs/go-utils v0.3.3
+require github.com/exonlabs/go-utils v0.3.4

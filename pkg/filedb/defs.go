@@ -3,6 +3,7 @@ package filedb
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 
 	"github.com/exonlabs/go-utils/pkg/types"
 )
@@ -11,6 +12,9 @@ type Options = types.NDict
 type Buffer = types.NDict
 
 const (
+	keySep           = "."
+	keyBakSuffix     = "_bak"
+	fileSep          = string(filepath.Separator)
 	defaultOpTimeout = float64(3)
 	defaultOpPolling = float64(0.1)
 	defaultDirPerm   = uint32(0o775)
