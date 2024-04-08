@@ -21,7 +21,7 @@ func main() {
 
 	fmt.Printf("\nUsing Database: %s\n", DBPATH)
 
-	dbc := filedb.NewCollection(DBPATH)
+	dbc, _ := filedb.NewCollection(DBPATH)
 
 	if *init {
 		syscall.Umask(0)

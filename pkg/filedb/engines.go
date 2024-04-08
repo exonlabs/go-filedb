@@ -112,6 +112,27 @@ func (dbe *FileEngine) WriteFile(fpath string, data []byte) error {
 	return nil
 }
 
+// create file if not exist
+func (dbe *FileEngine) TouchFile(fpath string) error {
+	// create dir tree for file if not exist
+	if !dbe.FileExist(fpath) {
+		dirpath := filepath.Dir(fpath)
+		if err := os.MkdirAll(dirpath, os.FileMode(dbe.DirPerm)); err != nil {
+			return fmt.Errorf("%w - %s", ErrWrite, err.Error())
+		}
+	}
+
+	// open file for write
+	f, err := os.OpenFile(
+		fpath, os.O_WRONLY|os.O_CREATE, os.FileMode(dbe.FilePerm))
+	if err != nil {
+		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
+	}
+	defer f.Close()
+
+	return nil
+}
+
 // delete file
 func (dbe *FileEngine) PurgeFile(fpath string) error {
 	err := os.Remove(fpath)

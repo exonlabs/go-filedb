@@ -35,7 +35,7 @@ func main() {
 
 	fmt.Printf("\nUsing Database: %s\n", DBPATH)
 
-	dbc := filedb.NewCollection(DBPATH)
+	dbc, _ := filedb.NewCollection(DBPATH)
 	init_security(dbc, *aes256)
 
 	if *init {

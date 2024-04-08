@@ -12,31 +12,16 @@ import (
 )
 
 var (
-	SECRET = "123456789"
 	DBPATH = filepath.Join(os.TempDir(), "filedb")
 )
 
-func init_security(dbc *filedb.Collection, aes256 bool) {
-	var err error
-	if aes256 {
-		err = dbc.InitAES256(SECRET)
-	} else {
-		err = dbc.InitAES128(SECRET)
-	}
-	if err != nil {
-		panic(fmt.Sprintf("Failed to initialize encryption: %v", err))
-	}
-}
-
 func main() {
 	init := flag.Bool("init", false, "initialize database store")
-	aes256 := flag.Bool("aes256", false, "use AES256 ciphering")
 	flag.Parse()
 
 	fmt.Printf("\nUsing Database: %s\n", DBPATH)
 
-	dbc := filedb.NewCollection(DBPATH)
-	init_security(dbc, *aes256)
+	dbc, _ := filedb.NewCollection(DBPATH)
 
 	if *init {
 		syscall.Umask(0)
@@ -49,7 +34,7 @@ func main() {
 		})
 		for _, k := range []string{
 			"a.1.11", "a.1.12", "a.2.21", "b.1.11", "c.1.11"} {
-			if err := dbq.SetSecureBuffer(k, d); err != nil {
+			if err := dbq.SetBuffer(k, d); err != nil {
 				fmt.Printf(
 					"Error setting secure buffer for key %s: %v\n", k, err)
 				return

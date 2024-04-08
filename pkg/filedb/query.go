@@ -25,7 +25,7 @@ func newQuery(dbc *Collection) *Query {
 
 func (dbq *Query) Keys() ([]string, error) {
 	res := []string{}
-	err := filepath.Walk(dbq.collection.BasePath,
+	err := filepath.Walk(dbq.collection.base_path,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -33,9 +33,9 @@ func (dbq *Query) Keys() ([]string, error) {
 			if !info.IsDir() {
 				if !strings.HasSuffix(path, keyBakSuffix) {
 					res = append(res, strings.TrimPrefix(
-						path, dbq.collection.BasePath+fileSep))
+						path, dbq.collection.base_path+fileSep))
 				}
-			} else if path != dbq.collection.BasePath {
+			} else if path != dbq.collection.base_path {
 				return fs.SkipDir
 			}
 			return nil
