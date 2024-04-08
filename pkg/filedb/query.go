@@ -16,16 +16,16 @@ type Query struct {
 	collection *Collection
 }
 
-func newQuery(col *Collection) *Query {
+func newQuery(dbc *Collection) *Query {
 	return &Query{
 		FileEngine: NewFileEngine(),
-		collection: col,
+		collection: dbc,
 	}
 }
 
-func (qry *Query) Keys() ([]string, error) {
+func (dbq *Query) Keys() ([]string, error) {
 	res := []string{}
-	err := filepath.Walk(qry.collection.BasePath,
+	err := filepath.Walk(dbq.collection.BasePath,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -33,9 +33,9 @@ func (qry *Query) Keys() ([]string, error) {
 			if !info.IsDir() {
 				if !strings.HasSuffix(path, keyBakSuffix) {
 					res = append(res, strings.TrimPrefix(
-						path, qry.collection.BasePath+fileSep))
+						path, dbq.collection.BasePath+fileSep))
 				}
-			} else if path != qry.collection.BasePath {
+			} else if path != dbq.collection.BasePath {
 				return fs.SkipDir
 			}
 			return nil
@@ -47,67 +47,67 @@ func (qry *Query) Keys() ([]string, error) {
 	return res, nil
 }
 
-func (qry *Query) IsExist(key string) bool {
-	return qry.FileExist(qry.collection.KeyPath(key))
+func (dbq *Query) IsExist(key string) bool {
+	return dbq.FileExist(dbq.collection.KeyPath(key))
 }
 
-func (qry *Query) Get(key string) ([]byte, error) {
-	keypath := qry.collection.KeyPath(key)
-	keybakpath := qry.collection.KeyPath(key + keyBakSuffix)
+func (dbq *Query) Get(key string) ([]byte, error) {
+	keypath := dbq.collection.KeyPath(key)
+	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
 	err := ErrNotExist
 
 	// check main file
-	if qry.FileExist(keypath) {
+	if dbq.FileExist(keypath) {
 		var data []byte
-		data, err = qry.ReadFile(keypath)
+		data, err = dbq.ReadFile(keypath)
 		if err == nil {
-			qry.WriteFile(keybakpath, data)
+			dbq.WriteFile(keybakpath, data)
 			return data, nil
 		}
 	}
 
 	// check backup
-	if qry.FileExist(keybakpath) {
+	if dbq.FileExist(keybakpath) {
 		var data []byte
-		data, err = qry.ReadFile(keybakpath)
+		data, err = dbq.ReadFile(keybakpath)
 		if err == nil {
-			qry.WriteFile(keypath, data)
+			dbq.WriteFile(keypath, data)
 			return data, nil
 		}
 	}
 
 	return nil, err
 }
-func (qry *Query) GetBuffer(key string) (Buffer, error) {
-	keypath := qry.collection.KeyPath(key)
-	keybakpath := qry.collection.KeyPath(key + keyBakSuffix)
+func (dbq *Query) GetBuffer(key string) (Buffer, error) {
+	keypath := dbq.collection.KeyPath(key)
+	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
 	err := ErrNotExist
 
 	// check main file
-	if qry.FileExist(keypath) {
+	if dbq.FileExist(keypath) {
 		var rawdata []byte
-		rawdata, err = qry.ReadFile(keypath)
+		rawdata, err = dbq.ReadFile(keypath)
 		if err == nil {
 			var data map[string]any
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
-				qry.WriteFile(keybakpath, rawdata)
+				dbq.WriteFile(keybakpath, rawdata)
 				return types.NewNDict(data), nil
 			}
 		}
 	}
 
 	// check backup
-	if qry.FileExist(keybakpath) {
+	if dbq.FileExist(keybakpath) {
 		var rawdata []byte
-		rawdata, err = qry.ReadFile(keybakpath)
+		rawdata, err = dbq.ReadFile(keybakpath)
 		if err == nil {
 			var data map[string]any
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
-				qry.WriteFile(keypath, rawdata)
+				dbq.WriteFile(keypath, rawdata)
 				return types.NewNDict(data), nil
 			}
 		}
@@ -115,35 +115,35 @@ func (qry *Query) GetBuffer(key string) (Buffer, error) {
 
 	return nil, err
 }
-func (qry *Query) GetBufferSlice(key string) ([]Buffer, error) {
-	keypath := qry.collection.KeyPath(key)
-	keybakpath := qry.collection.KeyPath(key + keyBakSuffix)
+func (dbq *Query) GetBufferSlice(key string) ([]Buffer, error) {
+	keypath := dbq.collection.KeyPath(key)
+	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
 	err := ErrNotExist
 
 	// check main file
-	if qry.FileExist(keypath) {
+	if dbq.FileExist(keypath) {
 		var rawdata []byte
-		rawdata, err = qry.ReadFile(keypath)
+		rawdata, err = dbq.ReadFile(keypath)
 		if err == nil {
 			var data []map[string]any
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
-				qry.WriteFile(keybakpath, rawdata)
+				dbq.WriteFile(keybakpath, rawdata)
 				return types.NewNDictSlice(data), nil
 			}
 		}
 	}
 
 	// check backup
-	if qry.FileExist(keybakpath) {
+	if dbq.FileExist(keybakpath) {
 		var rawdata []byte
-		rawdata, err = qry.ReadFile(keybakpath)
+		rawdata, err = dbq.ReadFile(keybakpath)
 		if err == nil {
 			var data []map[string]any
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
-				qry.WriteFile(keypath, rawdata)
+				dbq.WriteFile(keypath, rawdata)
 				return types.NewNDictSlice(data), nil
 			}
 		}
@@ -152,78 +152,78 @@ func (qry *Query) GetBufferSlice(key string) ([]Buffer, error) {
 	return nil, err
 }
 
-func (qry *Query) Set(key string, value []byte) error {
-	keypath := qry.collection.KeyPath(key)
-	keybakpath := qry.collection.KeyPath(key + keyBakSuffix)
+func (dbq *Query) Set(key string, value []byte) error {
+	keypath := dbq.collection.KeyPath(key)
+	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
-	err := qry.WriteFile(keypath, value)
+	err := dbq.WriteFile(keypath, value)
 	if err != nil {
 		return err
 	}
-	return qry.WriteFile(keybakpath, value)
+	return dbq.WriteFile(keybakpath, value)
 }
-func (qry *Query) SetBuffer(key string, value Buffer) error {
+func (dbq *Query) SetBuffer(key string, value Buffer) error {
 	data, err := json.MarshalIndent(value, "", "  ")
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
 	}
-	return qry.Set(key, data)
+	return dbq.Set(key, data)
 }
-func (qry *Query) SetBufferSlice(key string, value []Buffer) error {
+func (dbq *Query) SetBufferSlice(key string, value []Buffer) error {
 	data, err := json.MarshalIndent(value, "", "  ")
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
 	}
-	return qry.Set(key, data)
+	return dbq.Set(key, data)
 }
 
 // delete file
-func (qry *Query) Delete(key string) error {
-	keypath := qry.collection.KeyPath(key)
-	keybakpath := qry.collection.KeyPath(key + keyBakSuffix)
-	if qry.FileExist(keybakpath) {
-		qry.PurgeFile(keybakpath)
+func (dbq *Query) Delete(key string) error {
+	keypath := dbq.collection.KeyPath(key)
+	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
+	if dbq.FileExist(keybakpath) {
+		dbq.PurgeFile(keybakpath)
 	}
-	if qry.FileExist(keypath) {
-		return qry.PurgeFile(keypath)
+	if dbq.FileExist(keypath) {
+		return dbq.PurgeFile(keypath)
 	}
 	return nil
 }
 
 // read file content with shared locking
-func (qry *Query) GetSecure(key string) ([]byte, error) {
-	if qry.collection.cipher == nil {
+func (dbq *Query) GetSecure(key string) ([]byte, error) {
+	if dbq.collection.cipher == nil {
 		return nil, ErrNoSecurity
 	}
 
-	keypath := qry.collection.KeyPath(key)
-	keybakpath := qry.collection.KeyPath(key + keyBakSuffix)
+	keypath := dbq.collection.KeyPath(key)
+	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
 	err := ErrNotExist
 
 	// check main file
-	if qry.FileExist(keypath) {
+	if dbq.FileExist(keypath) {
 		var rawdata []byte
-		rawdata, err = qry.ReadFile(keypath)
+		rawdata, err = dbq.ReadFile(keypath)
 		if err == nil {
 			var value []byte
-			value, err = qry.collection.cipher.Decrypt(rawdata)
+			value, err = dbq.collection.cipher.Decrypt(rawdata)
 			if err == nil {
-				qry.WriteFile(keybakpath, rawdata)
+				dbq.WriteFile(keybakpath, rawdata)
 				return value, nil
 			}
 		}
 	}
 
 	// check backup
-	if qry.FileExist(keybakpath) {
+	if dbq.FileExist(keybakpath) {
 		var rawdata []byte
-		rawdata, err = qry.ReadFile(keybakpath)
+		rawdata, err = dbq.ReadFile(keybakpath)
 		if err == nil {
 			var value []byte
-			value, err = qry.collection.cipher.Decrypt(rawdata)
+			value, err = dbq.collection.cipher.Decrypt(rawdata)
 			if err == nil {
-				qry.WriteFile(keypath, rawdata)
+				dbq.WriteFile(keypath, rawdata)
 				return value, nil
 			}
 		}
@@ -231,28 +231,28 @@ func (qry *Query) GetSecure(key string) ([]byte, error) {
 
 	return nil, err
 }
-func (qry *Query) GetSecureBuffer(key string) (Buffer, error) {
-	if qry.collection.cipher == nil {
+func (dbq *Query) GetSecureBuffer(key string) (Buffer, error) {
+	if dbq.collection.cipher == nil {
 		return nil, ErrNoSecurity
 	}
 
-	keypath := qry.collection.KeyPath(key)
-	keybakpath := qry.collection.KeyPath(key + keyBakSuffix)
+	keypath := dbq.collection.KeyPath(key)
+	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
 	err := ErrNotExist
 
 	// check main file
-	if qry.FileExist(keypath) {
+	if dbq.FileExist(keypath) {
 		var rawdata []byte
-		rawdata, err = qry.ReadFile(keypath)
+		rawdata, err = dbq.ReadFile(keypath)
 		if err == nil {
 			var value []byte
-			value, err = qry.collection.cipher.Decrypt(rawdata)
+			value, err = dbq.collection.cipher.Decrypt(rawdata)
 			if err == nil {
 				var data map[string]any
 				err = json.Unmarshal(value, &data)
 				if err == nil {
-					qry.WriteFile(keybakpath, rawdata)
+					dbq.WriteFile(keybakpath, rawdata)
 					return types.NewNDict(data), nil
 				}
 			}
@@ -260,17 +260,17 @@ func (qry *Query) GetSecureBuffer(key string) (Buffer, error) {
 	}
 
 	// check backup
-	if qry.FileExist(keybakpath) {
+	if dbq.FileExist(keybakpath) {
 		var rawdata []byte
-		rawdata, err = qry.ReadFile(keybakpath)
+		rawdata, err = dbq.ReadFile(keybakpath)
 		if err == nil {
 			var value []byte
-			value, err = qry.collection.cipher.Decrypt(rawdata)
+			value, err = dbq.collection.cipher.Decrypt(rawdata)
 			if err == nil {
 				var data map[string]any
 				err = json.Unmarshal(value, &data)
 				if err == nil {
-					qry.WriteFile(keypath, rawdata)
+					dbq.WriteFile(keypath, rawdata)
 					return types.NewNDict(data), nil
 				}
 			}
@@ -279,28 +279,28 @@ func (qry *Query) GetSecureBuffer(key string) (Buffer, error) {
 
 	return nil, err
 }
-func (qry *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
-	if qry.collection.cipher == nil {
+func (dbq *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
+	if dbq.collection.cipher == nil {
 		return nil, ErrNoSecurity
 	}
 
-	keypath := qry.collection.KeyPath(key)
-	keybakpath := qry.collection.KeyPath(key + keyBakSuffix)
+	keypath := dbq.collection.KeyPath(key)
+	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
 	err := ErrNotExist
 
 	// check main file
-	if qry.FileExist(keypath) {
+	if dbq.FileExist(keypath) {
 		var rawdata []byte
-		rawdata, err = qry.ReadFile(keypath)
+		rawdata, err = dbq.ReadFile(keypath)
 		if err == nil {
 			var value []byte
-			value, err = qry.collection.cipher.Decrypt(rawdata)
+			value, err = dbq.collection.cipher.Decrypt(rawdata)
 			if err == nil {
 				var data []map[string]any
 				err = json.Unmarshal(value, &data)
 				if err == nil {
-					qry.WriteFile(keybakpath, rawdata)
+					dbq.WriteFile(keybakpath, rawdata)
 					return types.NewNDictSlice(data), nil
 				}
 			}
@@ -308,17 +308,17 @@ func (qry *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
 	}
 
 	// check backup
-	if qry.FileExist(keybakpath) {
+	if dbq.FileExist(keybakpath) {
 		var rawdata []byte
-		rawdata, err = qry.ReadFile(keybakpath)
+		rawdata, err = dbq.ReadFile(keybakpath)
 		if err == nil {
 			var value []byte
-			value, err = qry.collection.cipher.Decrypt(rawdata)
+			value, err = dbq.collection.cipher.Decrypt(rawdata)
 			if err == nil {
 				var data []map[string]any
 				err = json.Unmarshal(value, &data)
 				if err == nil {
-					qry.WriteFile(keypath, rawdata)
+					dbq.WriteFile(keypath, rawdata)
 					return types.NewNDictSlice(data), nil
 				}
 			}
@@ -329,27 +329,27 @@ func (qry *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
 }
 
 // write content to file with exclusive locking
-func (qry *Query) SetSecure(key string, value []byte) error {
-	if qry.collection.cipher == nil {
+func (dbq *Query) SetSecure(key string, value []byte) error {
+	if dbq.collection.cipher == nil {
 		return ErrNoSecurity
 	}
-	b, err := qry.collection.cipher.Encrypt(value)
+	b, err := dbq.collection.cipher.Encrypt(value)
 	if err != nil {
 		return fmt.Errorf("%w%s", ErrEncrypt, err.Error())
 	}
-	return qry.Set(key, b)
+	return dbq.Set(key, b)
 }
-func (qry *Query) SetSecureBuffer(key string, value Buffer) error {
+func (dbq *Query) SetSecureBuffer(key string, value Buffer) error {
 	data, err := json.Marshal(value)
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
 	}
-	return qry.SetSecure(key, data)
+	return dbq.SetSecure(key, data)
 }
-func (qry *Query) SetSecureBufferSlice(key string, value []Buffer) error {
+func (dbq *Query) SetSecureBufferSlice(key string, value []Buffer) error {
 	data, err := json.Marshal(value)
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
 	}
-	return qry.SetSecure(key, data)
+	return dbq.SetSecure(key, data)
 }

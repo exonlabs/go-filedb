@@ -36,15 +36,15 @@ func NewFileEngine() *FileEngine {
 }
 
 // update file engine options
-func (eng *FileEngine) UpdateOptions(opts Options) {
-	eng.OpTimeout = opts.GetFloat64("op_timeout", eng.OpTimeout)
-	eng.OpPolling = opts.GetFloat64("op_polling", eng.OpPolling)
-	eng.DirPerm = opts.GetUint32("dir_perm", eng.DirPerm)
-	eng.FilePerm = opts.GetUint32("file_perm", eng.FilePerm)
+func (dbe *FileEngine) UpdateOptions(opts Options) {
+	dbe.OpTimeout = opts.GetFloat64("op_timeout", dbe.OpTimeout)
+	dbe.OpPolling = opts.GetFloat64("op_polling", dbe.OpPolling)
+	dbe.DirPerm = opts.GetUint32("dir_perm", dbe.DirPerm)
+	dbe.FilePerm = opts.GetUint32("file_perm", dbe.FilePerm)
 }
 
 // check if file exists and is regular file
-func (eng *FileEngine) FileExist(fpath string) bool {
+func (dbe *FileEngine) FileExist(fpath string) bool {
 	finfo, err := os.Stat(fpath)
 	if os.IsNotExist(err) {
 		return false
@@ -56,7 +56,7 @@ func (eng *FileEngine) FileExist(fpath string) bool {
 }
 
 // read file content with shared locking
-func (eng *FileEngine) ReadFile(fpath string) ([]byte, error) {
+func (dbe *FileEngine) ReadFile(fpath string) ([]byte, error) {
 	// open file for read
 	f, err := os.OpenFile(fpath, os.O_RDONLY, os.ModePerm)
 	if err != nil {
@@ -65,11 +65,11 @@ func (eng *FileEngine) ReadFile(fpath string) ([]byte, error) {
 	defer f.Close()
 
 	// aquire file lock with retries
-	if err := eng.aquireFilelock(
-		f, false, eng.OpTimeout, eng.OpPolling); err != nil {
+	if err := dbe.aquireFilelock(
+		f, false, dbe.OpTimeout, dbe.OpPolling); err != nil {
 		return nil, err
 	}
-	defer eng.releaseFilelock(f)
+	defer dbe.releaseFilelock(f)
 
 	finfo, _ := f.Stat()
 	data := make([]byte, finfo.Size())
@@ -81,29 +81,29 @@ func (eng *FileEngine) ReadFile(fpath string) ([]byte, error) {
 }
 
 // write content to file with exclusive locking
-func (eng *FileEngine) WriteFile(fpath string, data []byte) error {
+func (dbe *FileEngine) WriteFile(fpath string, data []byte) error {
 	// create dir tree for file if not exist
-	if !eng.FileExist(fpath) {
+	if !dbe.FileExist(fpath) {
 		dirpath := filepath.Dir(fpath)
-		if err := os.MkdirAll(dirpath, os.FileMode(eng.DirPerm)); err != nil {
+		if err := os.MkdirAll(dirpath, os.FileMode(dbe.DirPerm)); err != nil {
 			return fmt.Errorf("%w - %s", ErrWrite, err.Error())
 		}
 	}
 
 	// open file for write
 	f, err := os.OpenFile(
-		fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.FileMode(eng.FilePerm))
+		fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.FileMode(dbe.FilePerm))
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
 	}
 	defer f.Close()
 
 	// aquire file lock with retries
-	if err := eng.aquireFilelock(
-		f, true, eng.OpTimeout, eng.OpPolling); err != nil {
+	if err := dbe.aquireFilelock(
+		f, true, dbe.OpTimeout, dbe.OpPolling); err != nil {
 		return err
 	}
-	defer eng.releaseFilelock(f)
+	defer dbe.releaseFilelock(f)
 
 	_, err = f.Write(data)
 	if err != nil {
@@ -113,7 +113,7 @@ func (eng *FileEngine) WriteFile(fpath string, data []byte) error {
 }
 
 // delete file
-func (eng *FileEngine) PurgeFile(fpath string) error {
+func (dbe *FileEngine) PurgeFile(fpath string) error {
 	err := os.Remove(fpath)
 	if err != nil {
 		return fmt.Errorf("%w%s", ErrError, err.Error())
@@ -122,15 +122,15 @@ func (eng *FileEngine) PurgeFile(fpath string) error {
 }
 
 // cancel blocking operations
-func (eng *FileEngine) Cancel() {
-	eng.evtBreak.Set()
+func (dbe *FileEngine) Cancel() {
+	dbe.evtBreak.Set()
 }
 
 // aquire file lock with retries
-func (eng *FileEngine) aquireFilelock(
+func (dbe *FileEngine) aquireFilelock(
 	f *os.File, wr bool, tout, tpoll float64) error {
 	var err error
-	eng.evtBreak.Clear()
+	dbe.evtBreak.Clear()
 	tbreak := float64(time.Now().Unix()) + tout
 	for {
 		if wr {
@@ -148,7 +148,7 @@ func (eng *FileEngine) aquireFilelock(
 			return ErrLocked
 		}
 		time.Sleep(time.Duration(tpoll * 1000000000))
-		if eng.evtBreak.IsSet() {
+		if dbe.evtBreak.IsSet() {
 			return ErrBreak
 		}
 		if float64(time.Now().Unix()) >= tbreak {
@@ -158,6 +158,6 @@ func (eng *FileEngine) aquireFilelock(
 }
 
 // release file lock
-func (eng *FileEngine) releaseFilelock(f *os.File) {
+func (dbe *FileEngine) releaseFilelock(f *os.File) {
 	unix.Flock(int(f.Fd()), unix.LOCK_UN|unix.LOCK_NB)
 }

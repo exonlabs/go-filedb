@@ -13,17 +13,18 @@ import (
 
 var (
 	SECRET = "123456789"
+	DBPATH = filepath.Join(os.TempDir(), "filedb")
 )
 
-func init_security(db *filedb.Query, aes256 bool) {
+func init_security(dbc *filedb.Collection, aes256 bool) {
 	var err error
 	if aes256 {
-		err = db.InitAES256(SECRET)
+		err = dbc.InitAES256(SECRET)
 	} else {
-		err = db.InitAES128(SECRET)
+		err = dbc.InitAES128(SECRET)
 	}
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("Failed to initialize encryption: %v", err))
 	}
 }
 
@@ -32,24 +33,25 @@ func main() {
 	aes256 := flag.Bool("aes256", false, "use AES256 ciphering")
 	flag.Parse()
 
-	dbPath := filepath.Join(os.TempDir(), "filedb")
-	fmt.Printf("\nUsing Database: %s\n", dbPath)
+	fmt.Printf("\nUsing Database: %s\n", DBPATH)
+
+	dbc := filedb.NewCollection(DBPATH)
+	init_security(dbc, *aes256)
 
 	if *init {
 		syscall.Umask(0)
-		os.RemoveAll(dbPath)
-		os.MkdirAll(dbPath, os.ModePerm)
+		os.RemoveAll(DBPATH)
+		os.MkdirAll(DBPATH, os.ModePerm)
 
-		db := filedb.NewPack(dbPath)
-		init_security(db, *aes256)
+		dbq := dbc.Query()
 		d := types.NewNDict(map[string]any{
 			"k1": []int{1, 2, 3},
 		})
 		for _, k := range []string{
 			"a.1.11", "a.1.12", "a.2.21", "b.1.11", "c.1.11"} {
-
-			if err := db.SetSecureBuffer(k, d); err != nil {
-				fmt.Println("error", err.Error())
+			if err := dbq.SetSecureBuffer(k, d); err != nil {
+				fmt.Println("Error:", err.Error())
+				return
 			}
 		}
 
@@ -57,14 +59,13 @@ func main() {
 		return
 	}
 
-	db := filedb.NewPack(dbPath)
-	init_security(db, *aes256)
-
 	fmt.Println("\nTesting Read ...")
+	dbq := dbc.Query()
 	for _, k := range []string{
 		"a.1.11", "a.1.12", "a.2.21", "b.1.11", "c.1.11"} {
-		if b, err := db.GetSecureBuffer(k); err != nil {
-			fmt.Println("error", err.Error())
+		if b, err := dbq.GetSecureBuffer(k); err != nil {
+			fmt.Println("Error:", err.Error())
+			return
 		} else {
 			fmt.Printf("%s = %v\n", k, b)
 		}
