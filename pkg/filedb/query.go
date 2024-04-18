@@ -130,7 +130,11 @@ func (dbq *Query) GetBufferSlice(key string) ([]Buffer, error) {
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
 				dbq.WriteFile(keybakpath, rawdata)
-				return types.NewNDictSlice(data), nil
+				var res []Buffer
+				for _, d := range data {
+					res = append(res, types.NewNDict(d))
+				}
+				return res, nil
 			}
 		}
 	}
@@ -144,7 +148,11 @@ func (dbq *Query) GetBufferSlice(key string) ([]Buffer, error) {
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
 				dbq.WriteFile(keypath, rawdata)
-				return types.NewNDictSlice(data), nil
+				var res []Buffer
+				for _, d := range data {
+					res = append(res, types.NewNDict(d))
+				}
+				return res, nil
 			}
 		}
 	}
@@ -301,7 +309,11 @@ func (dbq *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
 				err = json.Unmarshal(value, &data)
 				if err == nil {
 					dbq.WriteFile(keybakpath, rawdata)
-					return types.NewNDictSlice(data), nil
+					var res []Buffer
+					for _, d := range data {
+						res = append(res, types.NewNDict(d))
+					}
+					return res, nil
 				}
 			}
 		}
@@ -319,7 +331,11 @@ func (dbq *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
 				err = json.Unmarshal(value, &data)
 				if err == nil {
 					dbq.WriteFile(keypath, rawdata)
-					return types.NewNDictSlice(data), nil
+					var res []Buffer
+					for _, d := range data {
+						res = append(res, types.NewNDict(d))
+					}
+					return res, nil
 				}
 			}
 		}

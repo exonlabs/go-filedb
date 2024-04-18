@@ -29,13 +29,13 @@ func main() {
 		os.MkdirAll(DBPATH, os.ModePerm)
 
 		dbq := dbc.Query()
-		d := types.NewNDictSlice([]map[string]any{
-			{"k1": []int{1, 2, 3}},
-			{"k2": 1.4},
+		d := types.NewNDict(map[string]any{
+			"k1": []int{1, 2, 3},
+			"k2": 1.4,
 		})
 		for _, k := range []string{
 			"a.1.11", "a.1.12", "a.2.21", "b.1.11", "c.1.11"} {
-			if err := dbq.SetBufferSlice(k, d); err != nil {
+			if err := dbq.SetBufferSlice(k, []types.NDict{d}); err != nil {
 				fmt.Println("Error:", err.Error())
 				return
 			}
