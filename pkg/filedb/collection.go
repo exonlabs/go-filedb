@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/exonlabs/go-utils/pkg/crypto/xcipher"
-	"github.com/exonlabs/go-utils/pkg/os/xcopy"
+	"github.com/exonlabs/go-utils/pkg/abc/fsx"
+	"github.com/exonlabs/go-utils/pkg/ciphering"
 )
 
 type Collection struct {
@@ -17,7 +17,7 @@ type Collection struct {
 	base_path string
 
 	// cipher object
-	cipher xcipher.Cipher
+	cipher ciphering.Handler
 }
 
 func NewCollection(path string) (*Collection, error) {
@@ -35,7 +35,7 @@ func (dbc *Collection) String() string {
 }
 
 func (dbc *Collection) InitAES128(secret string) error {
-	cipher, err := xcipher.NewAES128(secret)
+	cipher, err := ciphering.NewAES128(secret)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (dbc *Collection) InitAES128(secret string) error {
 }
 
 func (dbc *Collection) InitAES256(secret string) error {
-	cipher, err := xcipher.NewAES256(secret)
+	cipher, err := ciphering.NewAES256(secret)
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func (dbc *Collection) Copy(srckey, dstkey string) error {
 		return fmt.Errorf("%wdst collection already exists", ErrError)
 	}
 
-	if err := xcopy.CopyDir(srckeypath, dstkeypath); err != nil {
+	if err := fsx.CopyDir(srckeypath, dstkeypath); err != nil {
 		return fmt.Errorf("%w%s", ErrError, err.Error())
 	}
 	return nil

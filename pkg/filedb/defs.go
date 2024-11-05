@@ -4,12 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-
-	"github.com/exonlabs/go-utils/pkg/types"
 )
-
-type Options = types.NDict
-type Buffer = types.NDict
 
 const (
 	keySep           = "."

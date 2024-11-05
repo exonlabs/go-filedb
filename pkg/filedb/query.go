@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/exonlabs/go-utils/pkg/types"
+	"github.com/exonlabs/go-utils/pkg/abc/dictx"
 )
 
 type Query struct {
@@ -79,7 +79,7 @@ func (dbq *Query) Get(key string) ([]byte, error) {
 
 	return nil, err
 }
-func (dbq *Query) GetBuffer(key string) (Buffer, error) {
+func (dbq *Query) GetBuffer(key string) (dictx.Dict, error) {
 	keypath := dbq.collection.KeyPath(key)
 	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
@@ -94,7 +94,7 @@ func (dbq *Query) GetBuffer(key string) (Buffer, error) {
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
 				dbq.WriteFile(keybakpath, rawdata)
-				return types.NewNDict(data), nil
+				return data, nil
 			}
 		}
 	}
@@ -108,14 +108,14 @@ func (dbq *Query) GetBuffer(key string) (Buffer, error) {
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
 				dbq.WriteFile(keypath, rawdata)
-				return types.NewNDict(data), nil
+				return data, nil
 			}
 		}
 	}
 
 	return nil, err
 }
-func (dbq *Query) GetBufferSlice(key string) ([]Buffer, error) {
+func (dbq *Query) GetBufferSlice(key string) ([]dictx.Dict, error) {
 	keypath := dbq.collection.KeyPath(key)
 	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
@@ -130,10 +130,8 @@ func (dbq *Query) GetBufferSlice(key string) ([]Buffer, error) {
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
 				dbq.WriteFile(keybakpath, rawdata)
-				var res []Buffer
-				for _, d := range data {
-					res = append(res, types.NewNDict(d))
-				}
+				var res []dictx.Dict
+				res = append(res, data...)
 				return res, nil
 			}
 		}
@@ -148,10 +146,8 @@ func (dbq *Query) GetBufferSlice(key string) ([]Buffer, error) {
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
 				dbq.WriteFile(keypath, rawdata)
-				var res []Buffer
-				for _, d := range data {
-					res = append(res, types.NewNDict(d))
-				}
+				var res []dictx.Dict
+				res = append(res, data...)
 				return res, nil
 			}
 		}
@@ -170,14 +166,14 @@ func (dbq *Query) Set(key string, value []byte) error {
 	}
 	return dbq.WriteFile(keybakpath, value)
 }
-func (dbq *Query) SetBuffer(key string, value Buffer) error {
+func (dbq *Query) SetBuffer(key string, value dictx.Dict) error {
 	data, err := json.MarshalIndent(value, "", "  ")
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
 	}
 	return dbq.Set(key, data)
 }
-func (dbq *Query) SetBufferSlice(key string, value []Buffer) error {
+func (dbq *Query) SetBufferSlice(key string, value []dictx.Dict) error {
 	data, err := json.MarshalIndent(value, "", "  ")
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
@@ -239,7 +235,7 @@ func (dbq *Query) GetSecure(key string) ([]byte, error) {
 
 	return nil, err
 }
-func (dbq *Query) GetSecureBuffer(key string) (Buffer, error) {
+func (dbq *Query) GetSecureBuffer(key string) (dictx.Dict, error) {
 	if dbq.collection.cipher == nil {
 		return nil, ErrNoSecurity
 	}
@@ -261,7 +257,7 @@ func (dbq *Query) GetSecureBuffer(key string) (Buffer, error) {
 				err = json.Unmarshal(value, &data)
 				if err == nil {
 					dbq.WriteFile(keybakpath, rawdata)
-					return types.NewNDict(data), nil
+					return data, nil
 				}
 			}
 		}
@@ -279,7 +275,7 @@ func (dbq *Query) GetSecureBuffer(key string) (Buffer, error) {
 				err = json.Unmarshal(value, &data)
 				if err == nil {
 					dbq.WriteFile(keypath, rawdata)
-					return types.NewNDict(data), nil
+					return data, nil
 				}
 			}
 		}
@@ -287,7 +283,7 @@ func (dbq *Query) GetSecureBuffer(key string) (Buffer, error) {
 
 	return nil, err
 }
-func (dbq *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
+func (dbq *Query) GetSecureBufferSlice(key string) ([]dictx.Dict, error) {
 	if dbq.collection.cipher == nil {
 		return nil, ErrNoSecurity
 	}
@@ -309,10 +305,8 @@ func (dbq *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
 				err = json.Unmarshal(value, &data)
 				if err == nil {
 					dbq.WriteFile(keybakpath, rawdata)
-					var res []Buffer
-					for _, d := range data {
-						res = append(res, types.NewNDict(d))
-					}
+					var res []dictx.Dict
+					res = append(res, data...)
 					return res, nil
 				}
 			}
@@ -331,10 +325,8 @@ func (dbq *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
 				err = json.Unmarshal(value, &data)
 				if err == nil {
 					dbq.WriteFile(keypath, rawdata)
-					var res []Buffer
-					for _, d := range data {
-						res = append(res, types.NewNDict(d))
-					}
+					var res []dictx.Dict
+					res = append(res, data...)
 					return res, nil
 				}
 			}
@@ -355,14 +347,14 @@ func (dbq *Query) SetSecure(key string, value []byte) error {
 	}
 	return dbq.Set(key, b)
 }
-func (dbq *Query) SetSecureBuffer(key string, value Buffer) error {
+func (dbq *Query) SetSecureBuffer(key string, value dictx.Dict) error {
 	data, err := json.Marshal(value)
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())
 	}
 	return dbq.SetSecure(key, data)
 }
-func (dbq *Query) SetSecureBufferSlice(key string, value []Buffer) error {
+func (dbq *Query) SetSecureBufferSlice(key string, value []dictx.Dict) error {
 	data, err := json.Marshal(value)
 	if err != nil {
 		return fmt.Errorf("%w - %s", ErrWrite, err.Error())

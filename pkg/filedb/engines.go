@@ -6,13 +6,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/exonlabs/go-utils/pkg/sync/xevent"
+	"github.com/exonlabs/go-utils/pkg/abc/dictx"
+	"github.com/exonlabs/go-utils/pkg/events"
 	"golang.org/x/sys/unix"
 )
 
 type FileEngine struct {
 	// operation events
-	evtBreak *xevent.Event
+	evtBreak *events.Event
 
 	// timeout for operations like read/write
 	OpTimeout float64
@@ -27,7 +28,7 @@ type FileEngine struct {
 // create new file engine
 func NewFileEngine() *FileEngine {
 	return &FileEngine{
-		evtBreak:  xevent.NewEvent(),
+		evtBreak:  events.New(),
 		OpTimeout: defaultOpTimeout,
 		OpPolling: defaultOpPolling,
 		DirPerm:   defaultDirPerm,
@@ -36,11 +37,11 @@ func NewFileEngine() *FileEngine {
 }
 
 // update file engine options
-func (dbe *FileEngine) UpdateOptions(opts Options) {
-	dbe.OpTimeout = opts.GetFloat64("op_timeout", dbe.OpTimeout)
-	dbe.OpPolling = opts.GetFloat64("op_polling", dbe.OpPolling)
-	dbe.DirPerm = opts.GetUint32("dir_perm", dbe.DirPerm)
-	dbe.FilePerm = opts.GetUint32("file_perm", dbe.FilePerm)
+func (dbe *FileEngine) UpdateOptions(opts dictx.Dict) {
+	dbe.OpTimeout = dictx.GetFloat(opts, "op_timeout", dbe.OpTimeout)
+	dbe.OpPolling = dictx.GetFloat(opts, "op_polling", dbe.OpTimeout)
+	dbe.DirPerm = uint32(dictx.GetUint(opts, "dir_perm", uint(dbe.DirPerm)))
+	dbe.FilePerm = uint32(dictx.GetUint(opts, "file_perm", uint(dbe.FilePerm)))
 }
 
 // check if file exists and is regular file
