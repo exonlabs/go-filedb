@@ -53,7 +53,7 @@ func (dbq *Query) IsExist(key string) bool {
 
 func (dbq *Query) Get(key string) ([]byte, error) {
 	keypath := dbq.collection.KeyPath(key)
-	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
+	// keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
 	err := ErrNotExist
 
@@ -62,26 +62,26 @@ func (dbq *Query) Get(key string) ([]byte, error) {
 		var data []byte
 		data, err = dbq.ReadFile(keypath)
 		if err == nil {
-			dbq.WriteFile(keybakpath, data)
+			// dbq.WriteFile(keybakpath, data)
 			return data, nil
 		}
 	}
 
-	// check backup
-	if dbq.FileExist(keybakpath) {
-		var data []byte
-		data, err = dbq.ReadFile(keybakpath)
-		if err == nil {
-			dbq.WriteFile(keypath, data)
-			return data, nil
-		}
-	}
+	// // check backup
+	// if dbq.FileExist(keybakpath) {
+	// 	var data []byte
+	// 	data, err = dbq.ReadFile(keybakpath)
+	// 	if err == nil {
+	// 		dbq.WriteFile(keypath, data)
+	// 		return data, nil
+	// 	}
+	// }
 
 	return nil, err
 }
 func (dbq *Query) GetBuffer(key string) (Buffer, error) {
 	keypath := dbq.collection.KeyPath(key)
-	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
+	// keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
 
 	err := ErrNotExist
 
@@ -93,25 +93,25 @@ func (dbq *Query) GetBuffer(key string) (Buffer, error) {
 			var data map[string]any
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
-				dbq.WriteFile(keybakpath, rawdata)
+				// dbq.WriteFile(keybakpath, rawdata)
 				return types.NewNDict(data), nil
 			}
 		}
 	}
 
 	// check backup
-	if dbq.FileExist(keybakpath) {
-		var rawdata []byte
-		rawdata, err = dbq.ReadFile(keybakpath)
-		if err == nil {
-			var data map[string]any
-			err = json.Unmarshal(rawdata, &data)
-			if err == nil {
-				dbq.WriteFile(keypath, rawdata)
-				return types.NewNDict(data), nil
-			}
-		}
-	}
+	// if dbq.FileExist(keybakpath) {
+	// 	var rawdata []byte
+	// 	rawdata, err = dbq.ReadFile(keybakpath)
+	// 	if err == nil {
+	// 		var data map[string]any
+	// 		err = json.Unmarshal(rawdata, &data)
+	// 		if err == nil {
+	// 			dbq.WriteFile(keypath, rawdata)
+	// 			return types.NewNDict(data), nil
+	// 		}
+	// 	}
+	// }
 
 	return nil, err
 }
@@ -162,13 +162,13 @@ func (dbq *Query) GetBufferSlice(key string) ([]Buffer, error) {
 
 func (dbq *Query) Set(key string, value []byte) error {
 	keypath := dbq.collection.KeyPath(key)
-	keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
-
-	err := dbq.WriteFile(keypath, value)
-	if err != nil {
-		return err
-	}
-	return dbq.WriteFile(keybakpath, value)
+	// keybakpath := dbq.collection.KeyPath(key + keyBakSuffix)
+	return dbq.WriteFile(keypath, value)
+	// err :=
+	// if err != nil {
+	// 	return err
+	// }
+	// return dbq.WriteFile(keybakpath, value)
 }
 func (dbq *Query) SetBuffer(key string, value Buffer) error {
 	data, err := json.MarshalIndent(value, "", "  ")
