@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	"github.com/exonlabs/go-filedb/pkg/filedb"
-	"github.com/exonlabs/go-utils/pkg/types"
+	"github.com/exonlabs/go-utils/pkg/abc/dictx"
 )
 
 var (
@@ -29,13 +29,13 @@ func main() {
 		os.MkdirAll(DBPATH, os.ModePerm)
 
 		dbq := dbc.Query()
-		d := types.NewNDict(map[string]any{
+		d := dictx.Dict{
 			"k1": []int{1, 2, 3},
 			"k2": 1.4,
-		})
+		}
 		for _, k := range []string{
 			"a.1.11", "a.1.12", "a.2.21", "b.1.11", "c.1.11"} {
-			if err := dbq.SetBufferSlice(k, []types.NDict{d}); err != nil {
+			if err := dbq.SetBufferSlice(k, []dictx.Dict{d}); err != nil {
 				fmt.Println("Error:", err.Error())
 				return
 			}

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/exonlabs/go-utils/pkg/types"
+	"github.com/exonlabs/go-utils/pkg/abc/dictx"
 )
 
-type Options = types.NDict
-type Buffer = types.NDict
+type Options = dictx.Dict
+type Buffer = dictx.Dict
 
 const (
 	keySep           = "."
@@ -17,8 +17,8 @@ const (
 	fileSep          = string(filepath.Separator)
 	defaultOpTimeout = float64(3)
 	defaultOpPolling = float64(0.1)
-	defaultDirPerm   = uint32(0o775)
-	defaultFilePerm  = uint32(0o664)
+	defaultDirPerm   = uint(0o775)
+	defaultFilePerm  = uint(0o664)
 )
 
 var (

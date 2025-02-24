@@ -6,28 +6,29 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/exonlabs/go-utils/pkg/sync/xevent"
+	"github.com/exonlabs/go-utils/pkg/abc/dictx"
+	"github.com/exonlabs/go-utils/pkg/events"
 	"golang.org/x/sys/unix"
 )
 
 type FileEngine struct {
 	// operation events
-	evtBreak *xevent.Event
+	evtBreak *events.Event
 
 	// timeout for operations like read/write
 	OpTimeout float64
 	// polling interval for blocked operations
 	OpPolling float64
 	// permission for new dir creation
-	DirPerm uint32
+	DirPerm uint
 	// permission for new file creation
-	FilePerm uint32
+	FilePerm uint
 }
 
 // create new file engine
 func NewFileEngine() *FileEngine {
 	return &FileEngine{
-		evtBreak:  xevent.NewEvent(),
+		evtBreak:  events.New(),
 		OpTimeout: defaultOpTimeout,
 		OpPolling: defaultOpPolling,
 		DirPerm:   defaultDirPerm,
@@ -37,10 +38,10 @@ func NewFileEngine() *FileEngine {
 
 // update file engine options
 func (dbe *FileEngine) UpdateOptions(opts Options) {
-	dbe.OpTimeout = opts.GetFloat64("op_timeout", dbe.OpTimeout)
-	dbe.OpPolling = opts.GetFloat64("op_polling", dbe.OpPolling)
-	dbe.DirPerm = opts.GetUint32("dir_perm", dbe.DirPerm)
-	dbe.FilePerm = opts.GetUint32("file_perm", dbe.FilePerm)
+	dbe.OpTimeout = dictx.GetFloat(opts, "op_timeout", dbe.OpTimeout)
+	dbe.OpPolling = dictx.GetFloat(opts, "op_polling", dbe.OpPolling)
+	dbe.DirPerm = dictx.GetUint(opts, "dir_perm", dbe.DirPerm)
+	dbe.FilePerm = dictx.GetUint(opts, "file_perm", dbe.FilePerm)
 }
 
 // check if file exists and is regular file

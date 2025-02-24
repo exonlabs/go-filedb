@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/exonlabs/go-utils/pkg/types"
+	"github.com/exonlabs/go-utils/pkg/abc/dictx"
 )
 
 type Query struct {
@@ -94,7 +94,7 @@ func (dbq *Query) GetBuffer(key string) (Buffer, error) {
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
 				dbq.WriteFile(keybakpath, rawdata)
-				return types.NewNDict(data), nil
+				return dictx.Dict(data), nil
 			}
 		}
 	}
@@ -108,7 +108,7 @@ func (dbq *Query) GetBuffer(key string) (Buffer, error) {
 			err = json.Unmarshal(rawdata, &data)
 			if err == nil {
 				dbq.WriteFile(keypath, rawdata)
-				return types.NewNDict(data), nil
+				return dictx.Dict(data), nil
 			}
 		}
 	}
@@ -132,7 +132,7 @@ func (dbq *Query) GetBufferSlice(key string) ([]Buffer, error) {
 				dbq.WriteFile(keybakpath, rawdata)
 				var res []Buffer
 				for _, d := range data {
-					res = append(res, types.NewNDict(d))
+					res = append(res, dictx.Dict(d))
 				}
 				return res, nil
 			}
@@ -150,7 +150,7 @@ func (dbq *Query) GetBufferSlice(key string) ([]Buffer, error) {
 				dbq.WriteFile(keypath, rawdata)
 				var res []Buffer
 				for _, d := range data {
-					res = append(res, types.NewNDict(d))
+					res = append(res, dictx.Dict(d))
 				}
 				return res, nil
 			}
@@ -261,7 +261,7 @@ func (dbq *Query) GetSecureBuffer(key string) (Buffer, error) {
 				err = json.Unmarshal(value, &data)
 				if err == nil {
 					dbq.WriteFile(keybakpath, rawdata)
-					return types.NewNDict(data), nil
+					return dictx.Dict(data), nil
 				}
 			}
 		}
@@ -279,7 +279,7 @@ func (dbq *Query) GetSecureBuffer(key string) (Buffer, error) {
 				err = json.Unmarshal(value, &data)
 				if err == nil {
 					dbq.WriteFile(keypath, rawdata)
-					return types.NewNDict(data), nil
+					return dictx.Dict(data), nil
 				}
 			}
 		}
@@ -311,7 +311,7 @@ func (dbq *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
 					dbq.WriteFile(keybakpath, rawdata)
 					var res []Buffer
 					for _, d := range data {
-						res = append(res, types.NewNDict(d))
+						res = append(res, dictx.Dict(d))
 					}
 					return res, nil
 				}
@@ -333,7 +333,7 @@ func (dbq *Query) GetSecureBufferSlice(key string) ([]Buffer, error) {
 					dbq.WriteFile(keypath, rawdata)
 					var res []Buffer
 					for _, d := range data {
-						res = append(res, types.NewNDict(d))
+						res = append(res, dictx.Dict(d))
 					}
 					return res, nil
 				}

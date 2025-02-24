@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	"github.com/exonlabs/go-filedb/pkg/filedb"
-	"github.com/exonlabs/go-utils/pkg/types"
+	"github.com/exonlabs/go-utils/pkg/abc/dictx"
 )
 
 var (
@@ -44,7 +44,7 @@ func main() {
 		os.MkdirAll(DBPATH, os.ModePerm)
 
 		dbq := dbc.Query()
-		d := types.NewNDict(map[string]any{
+		d := dictx.Dict(map[string]any{
 			"k1": []int{1, 2, 3},
 		})
 		for _, k := range []string{
